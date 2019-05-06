@@ -13,6 +13,7 @@ register_activation_hook( __FILE__, 'init_plugin' );   // https://codex.wordpres
 // Add menus in the admin panel
 add_action('admin_menu', 'setup_plugin_menu');        // https://developer.wordpress.org/reference/functions/add_action/
 
+add_shortcode('appointment_form', 'appointment_form_shortcode' );
 
 // Callback function used to add a menu entry for the plugin.
 function setup_plugin_menu(){
@@ -52,16 +53,49 @@ function main_page_html(){
     echo "<h1> Hello World! </h1>";
 }
 
+function appointment_form_html(){
+    echo "<form action='" . esc_url( $_SERVER['REQUEST_URI']) . "' method = 'post'";
+    echo "<p> Patient name (required) </br> <input type='text' name='ap_name' size='40' value='' required /> </p>";
+    echo "<p> Patient sex (required) </br> <select required name='ap_sex'><option value='male'> Male </option> <option value='female'> Female </option> </select> </p>";
+    echo "<p> Patient age (required) </br> <input type='number' name='ap_age' maxlength='3' value='' required /> <p>";
+    echo "<p> Hostpital (required) </br> <input type='text' name='ap_hostpital' value='' required /> </p>";
+    echo "<p> Department (required) </br> <input type='text' name='ap_dept' value='' required /> </p> ";
+    echo "<p> Doctor name (required) </br> <input type='text' name='ap_doc' value='' required /> </p> ";
+    echo "<p> <input type='submit' name='ap_submit' value='Place Appointment'> </p>";
+    echo "</form>";
+}
+
+function submit_appointment_form(){
+    if(isset($_POST['ap_submit'])){
+        $name = sanitize_text_field( $_POST['ap_name'] );
+        $sex = $_POST['ap_sex'];
+        $age = $_POST['ap_age'];
+        $hospital = $_POST['ap_hospital'];
+        $dept = $_POST['ap_dept'];
+        $doctor = $_POST['ap_doc'];
+        
+        echo "<p>" . $name . $sex . $age . $hospital . $dept . $doctor .  "</p>";
+    }
+}
+
+function appointment_form_shortcode(){
+    ob_start();
+    appointment_form_html();
+    submit_appointment_form();
+
+    return ob_get_clean();
+}
 // Callback function called when the plugin is activated. (register_activision_hook)
 function init_plugin(){
     create_table();
 }
 
+// Creates a table for the plugin.
 //https://codex.wordpress.org/Creating_Tables_with_Plugins
 function create_table(){
     global $wpdb;
 
-    $table_name = $wpdb->prefix . "appointment_manager_test";
+    $table_name = $wpdb->prefix . "appointment_manager";
 
     $charset_collate = $wpdb->get_charset_collate();
 
@@ -71,6 +105,9 @@ function create_table(){
         doctor varchar(100) NOT NULL,
         hospital varchar(100) NOT NULL,
         department varchar(100) NOT NULL,
+        name varchar(100) NOT NULL,
+        sex varchar(10) NOT NULL,
+        age varchar(3) NOT NULL,
         PRIMARY KEY  (id)
         ) $charset_collate";
 
